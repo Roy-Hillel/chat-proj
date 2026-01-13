@@ -145,10 +145,14 @@ export function ChatInterface() {
                   data.tool === "search" ? "tool:search" : "tool:calculator"
                 );
               } else if (type === "tool_end") {
-                setActivities((prev) => [
-                  ...prev,
-                  { type: "tool_end", ...data, timestamp: Date.now() },
-                ]);
+                // Update the existing tool_start activity instead of adding a new one
+                setActivities((prev) =>
+                  prev.map((activity) =>
+                    activity.type === "tool_start" && activity.tool === data.tool
+                      ? { ...activity, type: "tool_end", output: data.output }
+                      : activity
+                  )
+                );
                 setAvatarState("thinking");
               } else if (type === "error") {
                 setActivities((prev) => [

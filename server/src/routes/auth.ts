@@ -30,7 +30,7 @@ router.post('/login', async (req, res) => {
     const name = extractNameFromEmail(email);
     const user = await prisma.user.upsert({
       where: { email },
-      update: {},
+      update: { name },
       create: { email, name },
     });
     res.json({ user });
