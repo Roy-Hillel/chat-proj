@@ -1,9 +1,10 @@
 import OpenAI from "openai";
 import { tools, toolDefinitions } from "./registry";
 import { AgentEvent } from "./types";
+import { SYSTEM_PROMPT } from "./systemPrompt";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "dummy",
+  apiKey: (process.env.OPENAI_API_KEY || "dummy").trim().replace(/[^\x00-\x7F]/g, ""),
 });
 
 // Mock Logic for fallback
@@ -45,7 +46,8 @@ async function* runMockAgent(messages: any[]): AsyncGenerator<AgentEvent> {
     yield { type: "tool_end", tool: "search", output: result };
 
     yield { type: "content", content: `I found some information: ${result}` };
-  } else if (lastMsg.includes("movie")) {
+  } else {
+    // Treat everything else as a movie query for this test phase
     yield { type: "content", content: "Looking up movie recommendations...\n" };
 
     const toolName = "movie_recommendations";
@@ -62,17 +64,13 @@ async function* runMockAgent(messages: any[]): AsyncGenerator<AgentEvent> {
       yield { type: "tool_end", tool: toolName, output: result };
       yield { type: "content", content: result };
     } catch (error: any) {
-      const errorMsg = "Failed to get recommendations: " + error.message;
-      yield { type: "error", error: errorMsg };
-      yield { type: "content", content: errorMsg };
-    }
-  } else {
-    const reply =
-      "I am currently in Mock Mode because the OpenAI quota is exceeded. I can simulate 'calculator' and 'search' tools if you ask me to.";
-    // Stream the reply
-    for (const char of reply) {
-      yield { type: "content", content: char };
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Typing effect
+       const reply =
+      "I am currently in Mock Mode. I tried to look for a movie but failed. I can also simulate 'calculator' and 'search' tools.";
+       
+        for (const char of reply) {
+            yield { type: "content", content: char };
+            await new Promise((resolve) => setTimeout(resolve, 10));
+        }
     }
   }
 
@@ -84,7 +82,8 @@ export async function* runAgent(messages: any[]): AsyncGenerator<AgentEvent> {
     // Since we know the key is failing with 429, let's wrap the real call in try/catch and fallback.
 
   try {
-    let currentMessages = [...messages];
+    // Prepend system instructions at runtime (we don't store system messages in DB).
+    let currentMessages = [{ role: "system", content: SYSTEM_PROMPT }, ...messages];
     let keepGoing = true;
 
     // Fast-fail if key is dummy to avoid API hit
@@ -98,6 +97,14 @@ export async function* runAgent(messages: any[]): AsyncGenerator<AgentEvent> {
         content: "",
         tool_calls: [] as any[],
       };
+
+      // Ensure content is string to avoid encoding issues
+      // const safeMessages = currentMessages.map(m => ({
+      //   ...m,
+      //   content: String(m.content)
+      // }));
+
+      console.log('Using API key:', openai.apiKey);
 
       const stream = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -182,10 +189,8 @@ export async function* runAgent(messages: any[]): AsyncGenerator<AgentEvent> {
 
     yield { type: "done" };
   } catch (error: any) {
-    console.warn(
-      "OpenAI API failed, falling back to Mock Agent:",
-      error.message
-    );
+    console.error("OpenAI API failed:", error.message);
+    
     // Fallback to Mock Agent
     yield* runMockAgent(messages);
   }

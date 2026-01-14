@@ -33,6 +33,14 @@ describe('Avatar Component', () => {
     expect(container.querySelector('.animate-bounce')).toBeInTheDocument();
   });
 
+  it('renders tool:movies state with Film icon and amber color', () => {
+    const { container } = render(<Avatar state="tool:movies" />);
+    expect(container.querySelector('.text-amber-600')).toBeInTheDocument();
+    expect(container.querySelector('.bg-amber-100')).toBeInTheDocument();
+    expect(container.querySelector('.ring-amber-300')).toBeInTheDocument();
+    expect(container.querySelector('.animate-bounce')).toBeInTheDocument();
+  });
+
   it('renders error state with AlertCircle icon and red color', () => {
     const { container } = render(<Avatar state="error" />);
     expect(container.querySelector('.text-red-600')).toBeInTheDocument();

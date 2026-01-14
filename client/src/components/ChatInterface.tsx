@@ -24,11 +24,21 @@ export function ChatInterface() {
   const [activities, setActivities] = useState<any[]>([]);
   const [avatarState, setAvatarState] = useState<AvatarState>("idle");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const conversationHelpersRef = useRef<{
+    refresh: () => void;
+    updateTitle: (id: string, title: string) => void;
+  } | null>(null);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, activities]);
+
+  // Focus input when conversation changes (new chat or selecting from history)
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [currentConvId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -78,6 +88,14 @@ export function ChatInterface() {
       role: "user" as const,
       content: input,
     };
+    
+    // Optimistically update the title if this is the first message
+    const isFirstMessage = messages.length === 0;
+    if (isFirstMessage && convId) {
+      const newTitle = input.substring(0, 50).trim() || 'New Chat';
+      conversationHelpersRef.current?.updateTitle(convId, newTitle);
+    }
+    
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsStreaming(true);
@@ -141,9 +159,22 @@ export function ChatInterface() {
                   ...prev,
                   { type: "tool_start", ...data, timestamp: Date.now() },
                 ]);
-                setAvatarState(
-                  data.tool === "search" ? "tool:search" : "tool:calculator"
-                );
+                // Set avatar state based on tool type
+                const toolName = data.tool as string;
+                if (toolName === "search") {
+                  setAvatarState("tool:search");
+                } else if (toolName === "calculator") {
+                  setAvatarState("tool:calculator");
+                } else if (
+                  toolName.includes("movie") ||
+                  toolName === "movie_similarity" ||
+                  toolName === "movie_ratings" ||
+                  toolName === "movie_recommendations"
+                ) {
+                  setAvatarState("tool:movies");
+                } else {
+                  setAvatarState("thinking");
+                }
               } else if (type === "tool_end") {
                 // Update the existing tool_start activity instead of adding a new one
                 setActivities((prev) =>
@@ -168,6 +199,8 @@ export function ChatInterface() {
         }
       }
       setAvatarState("idle");
+      // Refresh conversations list to sync with server (e.g., updatedAt timestamp)
+      conversationHelpersRef.current?.refresh();
     } catch (error: any) {
       if (error.name !== "AbortError") {
         console.error(error);
@@ -180,16 +213,27 @@ export function ChatInterface() {
     }
   };
 
+  const handleDeleteConversation = (deletedId: string) => {
+    // Clear current conversation if it was the one deleted
+    if (currentConvId === deletedId) {
+      setCurrentConvId(null);
+      setMessages([]);
+      setActivities([]);
+    }
+  };
+
   return (
     <ChatLayout
       currentConversationId={currentConvId}
       onSelectConversation={loadConversation}
       onNewChat={createNewChat}
+      onDeleteConversation={handleDeleteConversation}
+      onRegisterConversationHelpers={(helpers) => { conversationHelpersRef.current = helpers; }}
       agentState={avatarState}
     >
-      <div className="flex flex-col h-full w-full">
+      <div className="flex flex-col h-full w-full min-h-0 overflow-hidden">
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scroll-smooth">
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scroll-smooth min-h-0">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center space-y-6 opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
@@ -198,14 +242,19 @@ export function ChatInterface() {
                   How can I help you today?
                 </h2>
                 <p className="text-gray-500 text-sm mt-2 text-center max-w-xs">
-                  I can perform calculations and search the web for information.
+                  I can perform calculations, search the web, and recommend movies.
                 </p>
               </div>
             </div>
           ) : (
             <>
               {messages.map((m) => (
-                <MessageBubble key={m.id} role={m.role} content={m.content} />
+                <MessageBubble 
+                  key={m.id} 
+                  role={m.role} 
+                  content={m.content}
+                  userInitial={user?.email?.[0]?.toUpperCase()}
+                />
               ))}
               {activities.length > 0 && (
                 <div className="animate-[slideIn_0.3s_ease-out]">
@@ -218,12 +267,13 @@ export function ChatInterface() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white/80 backdrop-blur-sm">
+        <div className="flex-shrink-0 p-4 bg-white/80 backdrop-blur-sm">
           <form
             onSubmit={sendMessage}
             className="relative shadow-lg rounded-2xl border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-black/5 transition-all"
           >
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}

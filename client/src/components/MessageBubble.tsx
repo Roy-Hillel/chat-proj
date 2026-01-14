@@ -1,14 +1,15 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { clsx } from 'clsx';
-import { User, Bot } from 'lucide-react';
+import { Bot } from 'lucide-react';
 
 interface MessageBubbleProps {
   role: 'user' | 'assistant';
   content: string;
+  userInitial?: string;
 }
 
-export function MessageBubble({ role, content }: MessageBubbleProps) {
+export function MessageBubble({ role, content, userInitial }: MessageBubbleProps) {
   const isUser = role === 'user';
   
   return (
@@ -19,12 +20,12 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
       )}>
         {/* Avatar */}
         <div className={clsx(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center border",
+          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
           isUser 
-            ? "bg-gray-100 border-gray-200 text-gray-600" 
-            : "bg-black border-black text-white"
+            ? "bg-purple-600 text-white text-xs font-bold" 
+            : "bg-black border border-black text-white"
         )}>
-          {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+          {isUser ? (userInitial || 'U') : <Bot className="w-4 h-4" />}
         </div>
         
         {/* Bubble */}

@@ -30,6 +30,16 @@ router.post('/', async (req, res) => {
 
     if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
 
+    // 2.5 Auto-update title if still "New Chat" (use first user message as title)
+    const userMessages = conversation.messages.filter(m => m.role === 'user');
+    if (conversation.title === 'New Chat' && userMessages.length === 1) {
+      const newTitle = message.substring(0, 50).trim() || 'New Chat';
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { title: newTitle }
+      });
+    }
+
     const history = conversation.messages.map(m => ({
       role: m.role as any,
       content: m.content

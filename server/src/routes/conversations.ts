@@ -49,4 +49,22 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Delete Conversation
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Delete all messages first (due to foreign key constraint)
+    await prisma.message.deleteMany({
+      where: { conversationId: id }
+    });
+    // Then delete the conversation
+    await prisma.conversation.delete({
+      where: { id }
+    });
+    res.json({ success: true });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 export default router;

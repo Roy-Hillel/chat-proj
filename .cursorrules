@@ -1,0 +1,24 @@
+# Project Rules & Guidelines
+
+## Documentation & Consistency
+- **Core Documentation**: Always follow the guidelines stated in @Project_overview.md and @README.md.
+- **Doc Updates**: Every code change requires verifying @README.md and @Project_overview.md. Update them immediately if the code change affects the documented architecture, API, or features.
+- **Breaking Changes**: If new code overrides behavior described in the documentation, you **MUST** highlight this with a 🔴 **RED WARNING** and explicitly present it as a breaking change to the code owner.
+
+## Testing & Quality
+- **Test Coverage**: New features **must** have new tests attached to them (Unit/Integration).
+- **Green Tests**: A task is **not** completed until all tests pass.
+- **Type Safety**: Write strict TypeScript. Avoid using `any` unless absolutely necessary. Define interfaces for all props and API responses.
+
+## Tech Stack & Patterns
+- **Frontend**: React 18+, TypeScript, Tailwind CSS, Vite.
+  - Use Functional Components and Hooks.
+  - Use the existing `AuthContext` and `ToastContext` for state.
+  - Use `lucide-react` for icons.
+- **Backend**: Node.js, Express, Prisma, SQLite.
+  - Keep controllers thin; logic should ideally reside in services or helper functions.
+  - Always handle async errors (try/catch) and return proper HTTP status codes.
+
+## Agent Development
+- **Tools**: When creating new agent tools, implement the `AgentTool` interface and register them in `server/src/agent/registry.ts`.
+- **Prompts**: Keep system prompts in `server/src/agent/systemPrompt.ts`.

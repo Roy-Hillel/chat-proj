@@ -180,7 +180,7 @@ describe('ChatInterface Component', () => {
 
       await waitFor(() => {
         expect(screen.getByText('How can I help you today?')).toBeInTheDocument();
-        expect(screen.getByText('I can perform calculations and search the web for information.')).toBeInTheDocument();
+        expect(screen.getByText('I can perform calculations, search the web, and recommend movies.')).toBeInTheDocument();
       });
     });
 
