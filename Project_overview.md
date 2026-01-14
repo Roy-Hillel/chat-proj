@@ -101,7 +101,7 @@ The server exposes a RESTful API with the following endpoints.
     *   **Description**: Main endpoint for interacting with the AI agent.
     *   **Response**: **Server-Sent Events (SSE)** stream.
         *   `event: content`: Partial text chunks of the AI's response.
-        *   `event: tool_start`: Notification that the AI is using a tool (e.g., calculator, search).
+        *   `event: tool_start`: Notification that the AI is using a tool (e.g., watchlist, search_movie_info).
         *   `event: tool_end`: Result of the tool execution.
         *   `event: done`: Signal that the response is complete.
 
@@ -126,7 +126,7 @@ The UI is composed of functional components:
     *   **Handling SSE Streams**: Reads the `ReadableStream` from the API to display AI responses character-by-character in real-time.
 *   **`ChatLayout.tsx`**: Defines the overall page structure, including the collapsible sidebar for conversation history and the main chat area.
 *   **`MessageBubble.tsx`**: Renders individual messages, styling them differently based on whether they are from the "user" or "assistant".
-*   **`Avatar.tsx`**: A visual representation of the agent, which changes states (`idle`, `thinking`, `tool:search`, `tool:calculator`, `error`) based on real-time events.
+*   **`Avatar.tsx`**: A visual representation of the agent, which changes states (`idle`, `thinking`, `tool:search`, `tool:watchlist`, `tool:movies`, `error`) based on real-time events.
 
 ### 3. Styling
 *   **Tailwind CSS**: Used for utility-first styling. This allows for rapid UI development with pre-defined classes for layout (`flex`, `grid`), spacing (`p-4`, `m-2`), colors (`bg-blue-500`), and responsiveness.
@@ -140,10 +140,10 @@ The UI is composed of functional components:
 
 The AI agent has access to a registry of tools that allow it to perform actions beyond simple text generation.
 
-### 1. Calculator
-*   **Description**: Performs basic arithmetic operations.
-*   **Operations**: `add`, `subtract`, `multiply`, `divide`.
-*   **Functionality**: Allows the agent to accurately compute mathematical expressions requested by the user.
+### 1. Movie Info Search
+*   **Description**: Search online for detailed movie information (placeholder - coming soon).
+*   **Info Types**: `cast`, `trivia`, `photos`, `all`.
+*   **Functionality**: Will allow the agent to fetch cast members, trivia facts, behind-the-scenes info, and photos for movies.
 
 ### 2. Movie Tools
 A suite of tools for movie discovery and information, utilizing external APIs (TasteDive and OMDB).
@@ -182,4 +182,4 @@ The `runAgent` function is an asynchronous generator that manages the conversati
 ### 2. Mock Fallback Strategy
 To ensure reliability (e.g., in case of API rate limits, network errors, or missing keys), the system implements a robust fallback mechanism (`runMockAgent`):
 *   If the primary OpenAI call fails, the system automatically switches to a local mock implementation.
-*   This mock agent uses simple heuristics (keyword matching) to simulate the behavior of the real agent, including "thinking" delays and "fake" tool executions for the calculator and search, ensuring the UI remains functional for demonstration purposes even without a live LLM connection.
+*   This mock agent uses simple heuristics (keyword matching) to simulate the behavior of the real agent, including "thinking" delays and "fake" tool executions for the watchlist and movie search, ensuring the UI remains functional for demonstration purposes even without a live LLM connection.

@@ -78,7 +78,7 @@ describe('ChatInterface Component', () => {
     it('renders input field with placeholder', async () => {
       renderWithAuth();
       await waitFor(() => {
-        const input = screen.getByPlaceholderText('Message AgentChat...');
+        const input = screen.getByPlaceholderText('Message MovieMate...');
         expect(input).toBeInTheDocument();
       });
     });
@@ -105,10 +105,10 @@ describe('ChatInterface Component', () => {
       renderWithAuth();
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Message AgentChat...')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Message MovieMate...')).toBeInTheDocument();
       });
 
-      const input = screen.getByPlaceholderText('Message AgentChat...') as HTMLInputElement;
+      const input = screen.getByPlaceholderText('Message MovieMate...') as HTMLInputElement;
       await user.type(input, 'Hello AI');
 
       expect(input.value).toBe('Hello AI');
@@ -118,7 +118,7 @@ describe('ChatInterface Component', () => {
       renderWithAuth();
 
       await waitFor(() => {
-        const input = screen.getByPlaceholderText('Message AgentChat...');
+        const input = screen.getByPlaceholderText('Message MovieMate...');
         expect(input).toBeInTheDocument();
       });
 
@@ -132,10 +132,10 @@ describe('ChatInterface Component', () => {
       renderWithAuth();
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Message AgentChat...')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Message MovieMate...')).toBeInTheDocument();
       });
 
-      const input = screen.getByPlaceholderText('Message AgentChat...');
+      const input = screen.getByPlaceholderText('Message MovieMate...');
       await user.type(input, 'Test message');
 
       const buttons = screen.getAllByRole('button');
@@ -151,7 +151,7 @@ describe('ChatInterface Component', () => {
       await waitFor(() => {
         expect(screen.getByTestId('chat-layout')).toBeInTheDocument();
         expect(screen.getByTestId('avatar')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('Message AgentChat...')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Message MovieMate...')).toBeInTheDocument();
       });
     });
 
@@ -188,7 +188,7 @@ describe('ChatInterface Component', () => {
       renderWithAuth();
 
       await waitFor(() => {
-        const input = screen.getByPlaceholderText('Message AgentChat...');
+        const input = screen.getByPlaceholderText('Message MovieMate...');
         expect(input).toBeInTheDocument();
       });
     });

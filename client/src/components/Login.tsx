@@ -30,7 +30,7 @@ export function Login() {
           </div>
         </div>
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
-          Welcome to AgentChat
+          Welcome to MovieMate
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (

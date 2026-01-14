@@ -17,7 +17,7 @@ import {
 } from "../src/agent/tools/watchlist";
 import { ToolContext } from "../src/agent/types";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const prisma = new PrismaClient();
 

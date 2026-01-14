@@ -1,4 +1,3 @@
-import { calculatorTool } from "./tools/calculator";
 import { searchTool } from "./tools/search";
 import {
   movieRecommendationsTool,
@@ -15,7 +14,6 @@ import {
 import { AgentTool } from "./types";
 
 export const tools: Record<string, AgentTool> = {
-  [calculatorTool.name]: calculatorTool,
   [searchTool.name]: searchTool,
   [movieSimilarityTool.name]: movieSimilarityTool,
   [movieRatingsTool.name]: movieRatingsTool,

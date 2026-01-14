@@ -205,7 +205,7 @@ export function ChatLayout({
             >
               {isSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
             </button>
-            <span className="font-semibold text-gray-700">AgentChat</span>
+            <span className="font-semibold text-gray-700">MovieMate</span>
             <div className="ml-2">
                <Avatar state={agentState} size="sm" />
             </div>

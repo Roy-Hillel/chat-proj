@@ -45,12 +45,12 @@ describe('ActivityIndicator Component', () => {
     it('displays tool_start with loader icon', () => {
       const activities = [{
         type: 'tool_start' as const,
-        tool: 'calculator',
-        input: { expression: '2+2' },
+        tool: 'add_to_watchlist',
+        input: { titles: ['The Matrix'] },
         timestamp: Date.now()
       }];
       const { container } = render(<ActivityIndicator activities={activities} />);
-      expect(screen.getByText('Running tool: calculator')).toBeInTheDocument();
+      expect(screen.getByText('Running tool: add_to_watchlist')).toBeInTheDocument();
       expect(container.querySelector('.animate-spin')).toBeInTheDocument();
       expect(container.querySelector('.text-blue-500')).toBeInTheDocument();
     });
@@ -86,12 +86,12 @@ describe('ActivityIndicator Component', () => {
     it('displays tool_end with check icon', () => {
       const activities = [{
         type: 'tool_end' as const,
-        tool: 'calculator',
-        output: '4',
+        tool: 'add_to_watchlist',
+        output: '✅ Added to your watchlist: The Matrix',
         timestamp: Date.now()
       }];
       const { container } = render(<ActivityIndicator activities={activities} />);
-      expect(screen.getByText('Tool finished: calculator')).toBeInTheDocument();
+      expect(screen.getByText('Tool finished: add_to_watchlist')).toBeInTheDocument();
       expect(container.querySelector('.text-green-500')).toBeInTheDocument();
     });
 
@@ -174,20 +174,20 @@ describe('ActivityIndicator Component', () => {
       const activities = [
         {
           type: 'tool_start' as const,
-          tool: 'calculator',
-          input: { expression: '10 * 5' },
+          tool: 'get_watchlist',
+          input: { sortBy: 'addedAt' },
           timestamp: Date.now()
         },
         {
           type: 'tool_end' as const,
-          tool: 'calculator',
-          output: '50',
+          tool: 'get_watchlist',
+          output: '📽️ Your Watchlist (2 movies)',
           timestamp: Date.now() + 100
         }
       ];
       render(<ActivityIndicator activities={activities} />);
-      expect(screen.getByText('Running tool: calculator')).toBeInTheDocument();
-      expect(screen.getByText('Tool finished: calculator')).toBeInTheDocument();
+      expect(screen.getByText('Running tool: get_watchlist')).toBeInTheDocument();
+      expect(screen.getByText('Tool finished: get_watchlist')).toBeInTheDocument();
     });
 
     it('displays error after tool start', () => {

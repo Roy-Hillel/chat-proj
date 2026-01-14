@@ -7,88 +7,13 @@ import {
 import { tools, toolDefinitions } from "./registry";
 import { AgentEvent, ToolContext } from "./types";
 import { SYSTEM_PROMPT } from "./systemPrompt";
+import { runMockAgent } from "./mockAgent";
 
 const openai = new OpenAI({
   apiKey: (process.env.OPENAI_API_KEY || "dummy")
     .trim()
     .replace(/[^\x00-\x7F]/g, ""),
 });
-
-// Mock Logic for fallback
-async function* runMockAgent(
-  messages: ChatCompletionMessageParam[],
-  context: ToolContext
-): AsyncGenerator<AgentEvent> {
-  const lastMessage = messages[messages.length - 1];
-  const lastContent =
-    typeof lastMessage.content === "string" ? lastMessage.content : "";
-  const lastMsg = lastContent.toLowerCase();
-
-  // Simulate "thinking" delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  if (
-    lastMsg.includes("calc") ||
-    lastMsg.includes("+") ||
-    lastMsg.includes("-") ||
-    lastMsg.includes("*") ||
-    lastMsg.includes("/")
-  ) {
-    yield {
-      type: "content",
-      content: "I see you want to calculate something. Let me use my tool.\n",
-    };
-
-    // Mock Tool Call
-    yield {
-      type: "tool_start",
-      tool: "calculator",
-      input: { operation: "add", a: 50, b: 20 },
-    };
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const result = "70";
-    yield { type: "tool_end", tool: "calculator", output: result };
-
-    yield { type: "content", content: `The result is ${result}.` };
-  } else if (lastMsg.includes("search")) {
-    yield { type: "content", content: "Searching the web for you...\n" };
-
-    yield { type: "tool_start", tool: "search", input: { query: lastMsg } };
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    const result = "Found 2 results: 1. AgentChat Docs 2. React Tutorial";
-    yield { type: "tool_end", tool: "search", output: result };
-
-    yield { type: "content", content: `I found some information: ${result}` };
-  } else {
-    // Treat everything else as a movie query for this test phase
-    yield { type: "content", content: "Looking up movie recommendations...\n" };
-
-    const toolName = "movie_recommendations";
-    // Simple heuristic: use the full message as the query
-    const input = { query: lastMsg };
-
-    yield { type: "tool_start", tool: toolName, input };
-
-    try {
-      // Use the actual tool since we implemented it
-      const tool = tools[toolName];
-      const result = await tool.run(input, context);
-
-      yield { type: "tool_end", tool: toolName, output: result };
-      yield { type: "content", content: result };
-    } catch (error) {
-      const reply =
-        "I am currently in Mock Mode. I tried to look for a movie but failed. I can also simulate 'calculator' and 'search' tools.";
-
-      for (const char of reply) {
-        yield { type: "content", content: char };
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
-    }
-  }
-
-  yield { type: "done" };
-}
 
 export async function* runAgent(
   messages: ChatCompletionMessageParam[],

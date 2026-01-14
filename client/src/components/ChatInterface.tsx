@@ -161,10 +161,17 @@ export function ChatInterface() {
                 ]);
                 // Set avatar state based on tool type
                 const toolName = data.tool as string;
-                if (toolName === "search") {
+                if (toolName === "search_movie_info") {
                   setAvatarState("tool:search");
-                } else if (toolName === "calculator") {
-                  setAvatarState("tool:calculator");
+                } else if (
+                  toolName.includes("watchlist") ||
+                  toolName === "add_to_watchlist" ||
+                  toolName === "get_watchlist" ||
+                  toolName === "remove_from_watchlist" ||
+                  toolName === "rate_watchlist_movie" ||
+                  toolName === "mark_as_watched"
+                ) {
+                  setAvatarState("tool:watchlist");
                 } else if (
                   toolName.includes("movie") ||
                   toolName === "movie_similarity" ||
@@ -277,7 +284,7 @@ export function ChatInterface() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Message AgentChat..."
+              placeholder="Message MovieMate..."
               className="w-full bg-transparent text-gray-900 placeholder-gray-400 border-0 rounded-2xl py-4 pl-5 pr-14 focus:ring-0 resize-none text-base"
               disabled={isStreaming}
               autoFocus

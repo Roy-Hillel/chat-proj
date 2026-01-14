@@ -1,10 +1,10 @@
-# AgentChat
+# MovieMate
 
 A full-stack AI chat application featuring a tool-using agent, real-time streaming, and a contextual avatar.
 
 ## Features
 
-- **Agent Orchestration**: Powered by OpenAI, capable of using tools (Calculator, Search, Movie Recommendations, Watchlist).
+- **Agent Orchestration**: Powered by OpenAI, capable of using tools (Movie Info Search, Movie Recommendations, Watchlist Management).
 - **Movie Recommendations**: Get personalized movie suggestions with IMDb ratings, powered by TasteDive and OMDb APIs.
 - **Personal Watchlist**: Save movies to watch later, rate them, mark as watched, and filter your list.
 - **Tool-Driven**: The agent can perform actions and the UI visualizes this "thinking" process.
@@ -162,8 +162,9 @@ SQLite is used for zero-configuration persistence. Prisma is used for type-safe 
 ### Contextual Avatar
 To make the AI feel more "alive", the avatar changes state:
 - **Brain**: General thinking/planning.
-- **Magnifying Glass**: Searching the web.
-- **Calculator**: Doing math.
+- **Magnifying Glass**: Searching for movie info online.
+- **Bookmark**: Managing watchlist.
+- **Film**: Movie recommendations/ratings.
 - **Alert**: Error state.
 
 This provides immediate visual feedback on what the agent is doing behind the scenes.

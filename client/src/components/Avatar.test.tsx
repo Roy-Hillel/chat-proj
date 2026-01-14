@@ -25,11 +25,11 @@ describe('Avatar Component', () => {
     expect(container.querySelector('.animate-bounce')).toBeInTheDocument();
   });
 
-  it('renders tool:calculator state with Calculator icon and green color', () => {
-    const { container } = render(<Avatar state="tool:calculator" />);
-    expect(container.querySelector('.text-green-600')).toBeInTheDocument();
-    expect(container.querySelector('.bg-green-100')).toBeInTheDocument();
-    expect(container.querySelector('.ring-green-300')).toBeInTheDocument();
+  it('renders tool:watchlist state with Bookmark icon and rose color', () => {
+    const { container } = render(<Avatar state="tool:watchlist" />);
+    expect(container.querySelector('.text-rose-600')).toBeInTheDocument();
+    expect(container.querySelector('.bg-rose-100')).toBeInTheDocument();
+    expect(container.querySelector('.ring-rose-300')).toBeInTheDocument();
     expect(container.querySelector('.animate-bounce')).toBeInTheDocument();
   });
 

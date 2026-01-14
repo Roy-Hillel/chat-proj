@@ -29,7 +29,7 @@ npm run test:coverage
 The following components have comprehensive test coverage:
 
 ### ✅ Avatar Component (`src/components/Avatar.test.tsx`)
-- Tests all avatar states (idle, thinking, tool:search, tool:calculator, error)
+- Tests all avatar states (idle, thinking, tool:search, tool:watchlist, tool:movies, error)
 - Tests all size variations (sm, md, lg)
 - Tests styling and animations
 - **10 tests**

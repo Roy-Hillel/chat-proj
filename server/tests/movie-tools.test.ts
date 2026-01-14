@@ -15,7 +15,7 @@ import {
 } from "../src/agent/tools/movies";
 import { ToolContext } from "../src/agent/types";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // Dummy context for movie tools (they don't use userId)
 const dummyContext: ToolContext = { userId: "test-user" };
