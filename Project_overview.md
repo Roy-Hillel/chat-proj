@@ -180,6 +180,61 @@ The `runAgent` function is an asynchronous generator that manages the conversati
 5.  **Recursion**: The loop continues, sending the updated history (with tool results) back to the model so it can generate a final natural language response based on the new data.
 
 ### 2. Mock Fallback Strategy
-To ensure reliability (e.g., in case of API rate limits, network errors, or missing keys), the system implements a robust fallback mechanism (`runMockAgent`):
-*   If the primary OpenAI call fails, the system automatically switches to a local mock implementation.
-*   This mock agent uses simple heuristics (keyword matching) to simulate the behavior of the real agent, including "thinking" delays and "fake" tool executions for the watchlist and movie search, ensuring the UI remains functional for demonstration purposes even without a live LLM connection.
+
+To ensure reliability, the system implements a robust fallback mechanism (`server/src/agent/mockAgent.ts`).
+
+#### When Does the Mock Activate?
+
+The mock agent is triggered automatically in these scenarios:
+
+1. **No API Key**: If `OPENAI_API_KEY` is missing or set to `"dummy"` in `server/.env`, the agent fast-fails immediately and falls back to mock mode.
+2. **API Errors**: If OpenAI returns any error (rate limit 429, authentication failure, network timeout, etc.), the `catch` block switches to `runMockAgent()`.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     runAgent()                          │
+├─────────────────────────────────────────────────────────┤
+│  if (apiKey === "dummy") → throw → runMockAgent()       │
+│                                                         │
+│  try {                                                  │
+│      OpenAI API call (gpt-4o-mini)                      │
+│  } catch (error) {                                      │
+│      → runMockAgent()   ← fallback on ANY failure       │
+│  }                                                      │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### What's Mocked vs. What's Real?
+
+| Component | Mock Mode | Real LLM Mode |
+|-----------|-----------|---------------|
+| **Natural Language Understanding** | ❌ Simple keyword matching | ✅ GPT-4o-mini |
+| **Tool Selection Logic** | ❌ Pattern-based heuristics | ✅ LLM decides which tool to call |
+| **Tool Execution** | ✅ **REAL** - actual tools run | ✅ **REAL** |
+| **Database Operations** | ✅ **REAL** - Prisma/SQLite | ✅ **REAL** |
+| **External API Calls** | ✅ **REAL** - TasteDive, OMDB | ✅ **REAL** |
+| **Response Generation** | ❌ Raw tool output | ✅ Natural language summary |
+
+**Key insight**: The mock only replaces the **LLM's decision-making**. All tool calls, database writes, and external API requests are still **real**.
+
+#### Mock Keyword Patterns
+
+The mock uses simple pattern matching to decide which tool to invoke:
+
+| User Input Pattern | Tool Triggered |
+|-------------------|----------------|
+| `watchlist: <movie>` | `add_to_watchlist` with that movie |
+| Contains `"search"` | `search_movie_info` (placeholder) |
+| Anything else | `movie_recommendations` using full message as query |
+
+#### Differences with a Real LLM
+
+With a real LLM (GPT-4o-mini), the experience is significantly richer:
+
+1. **Intent Recognition**: The LLM understands natural language like *"I loved Inception, what else should I watch?"* and correctly calls `movie_recommendations`.
+2. **Multi-turn Context**: The LLM remembers previous messages and can handle follow-ups like *"Add those to my watchlist"*.
+3. **Tool Chaining**: The LLM can call multiple tools in sequence (e.g., get recommendations → add to watchlist → confirm).
+4. **Natural Responses**: Instead of raw tool output, the LLM provides conversational summaries like *"I found 5 movies similar to Inception. Here are my top picks..."*
+5. **Error Handling**: The LLM gracefully handles edge cases and provides helpful suggestions.
+
+The mock is designed for **demonstration and development** when an OpenAI API key is unavailable or rate-limited.

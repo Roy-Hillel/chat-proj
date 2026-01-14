@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Bot, Mail, AlertCircle } from "lucide-react";
+import { Mail, AlertCircle, Clapperboard, Popcorn } from "lucide-react";
 
 export function Login() {
   const { login } = useAuth();
@@ -23,15 +23,25 @@ export function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <div className="flex justify-center mb-6">
-          <div className="p-3 bg-blue-100 rounded-full">
-            <Bot className="w-8 h-8 text-blue-600" />
+      <div className="max-w-md w-full mx-4">
+        {/* Cinema marquee-style card */}
+        <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-amber-500">
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className="p-4 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl shadow-lg">
+                <Clapperboard className="w-10 h-10 text-white" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 p-1.5 bg-red-500 rounded-full shadow-md">
+                <Popcorn className="w-4 h-4 text-white" />
+              </div>
+            </div>
           </div>
-        </div>
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
-          Welcome to MovieMate
-        </h2>
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">
+            Welcome to MovieMate
+          </h2>
+          <p className="text-sm text-gray-500 text-center mb-8">
+            Your personal movie companion
+          </p>
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
@@ -53,7 +63,7 @@ export function Login() {
               <input
                 type="email"
                 required
-                className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 border"
+                className="focus:ring-amber-500 focus:border-amber-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg h-11 border"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -63,11 +73,21 @@ export function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 transition-all"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Signing in..." : "Start Watching 🎬"}
           </button>
         </form>
+        </div>
+        
+        {/* Film strip decoration at bottom */}
+        <div className="flex justify-center mt-6 opacity-20">
+          <div className="flex gap-1">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className="w-2 h-3 bg-gray-400 rounded-sm"></div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -150,6 +150,60 @@ No need to modify the test runner scripts!
 | Integration tests | Server running on `localhost:3001` |
 | Conversations API tests | Server running on `localhost:3001` |
 
+## Mock Agent Mode
+
+The app includes a **mock agent** that activates automatically when OpenAI is unavailable, allowing you to demo the app without an API key.
+
+### When Does Mock Mode Activate?
+
+| Condition | Result |
+|-----------|--------|
+| `OPENAI_API_KEY` not set or `"dummy"` | → Mock Mode |
+| OpenAI API returns 429 (rate limit) | → Mock Mode |
+| OpenAI API returns any error | → Mock Mode |
+| OpenAI API works normally | → Real LLM Mode |
+
+### Using Mock Mode
+
+The mock uses **keyword patterns** instead of AI understanding:
+
+| What You Type | What Happens |
+|--------------|--------------|
+| `watchlist: Inception` | Adds "Inception" to your watchlist |
+| `watchlist: The Matrix` | Adds "The Matrix" to your watchlist |
+| `search anything` | Triggers movie info search (placeholder) |
+| `Inception` | Treats as movie query → returns recommendations |
+| `sci-fi movies` | Treats as movie query → returns recommendations |
+
+**Examples:**
+```
+You: watchlist: Pulp Fiction
+→ Adds Pulp Fiction to your watchlist (REAL database write)
+
+You: Inception
+→ Returns movies similar to Inception (REAL TasteDive + OMDB API calls)
+```
+
+### What's Real vs. Mocked?
+
+**Only the LLM decision-making is mocked.** Everything else is real:
+
+- ✅ **Real**: Database operations (watchlist saves, user data)
+- ✅ **Real**: External APIs (TasteDive recommendations, OMDB ratings)
+- ✅ **Real**: Tool execution (all registered tools work)
+- ❌ **Mocked**: Natural language understanding (uses keyword matching)
+- ❌ **Mocked**: Conversational responses (returns raw tool output)
+
+### Limitations vs. Real LLM
+
+With mock mode, you lose:
+- Natural language understanding (*"Add that one to my list"* won't work)
+- Multi-turn conversation context
+- Intelligent tool selection
+- Natural language response generation
+
+The mock is designed for **demo and development** purposes.
+
 ## Architecture & Decisions
 
 ### Streaming Protocol

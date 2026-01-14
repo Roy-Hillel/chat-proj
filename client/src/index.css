@@ -2,6 +2,9 @@
 
 @theme {
   --font-sans: "Inter", sans-serif;
+  /* Cinema-inspired accent colors */
+  --color-cinema-gold: #d97706;
+  --color-cinema-red: #dc2626;
 }
 
 body {
@@ -22,4 +25,14 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-400;
+}
+
+/* Subtle film strip animation for loading states */
+@keyframes filmRoll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-12px); }
+}
+
+.film-roll {
+  animation: filmRoll 0.5s steps(3) infinite;
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
-import { Plus, LogOut, PanelLeftClose, PanelLeftOpen, Trash2 } from 'lucide-react';
+import { Plus, LogOut, PanelLeftClose, PanelLeftOpen, Trash2, Clapperboard } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Avatar, type AvatarState } from './Avatar';
 import { ConfirmModal } from './ConfirmModal';
@@ -152,7 +152,14 @@ export function ChatLayout({
 
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 min-h-0">
-          <div className="text-xs font-semibold text-gray-400 mb-2 px-2 flex-shrink-0">History</div>
+          <div className="text-xs font-semibold text-gray-400 mb-2 px-2 flex-shrink-0 flex items-center gap-2">
+            <span className="flex gap-0.5 opacity-50">
+              <span className="w-1 h-2 bg-gray-400 rounded-sm"></span>
+              <span className="w-1 h-2 bg-gray-400 rounded-sm"></span>
+              <span className="w-1 h-2 bg-gray-400 rounded-sm"></span>
+            </span>
+            History
+          </div>
           {conversations.map((conv) => (
             <div
               key={conv.id}
@@ -205,7 +212,10 @@ export function ChatLayout({
             >
               {isSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
             </button>
-            <span className="font-semibold text-gray-700">MovieMate</span>
+            <div className="flex items-center gap-1.5">
+              <Clapperboard className="w-5 h-5 text-amber-600" />
+              <span className="font-semibold text-gray-700">MovieMate</span>
+            </div>
             <div className="ml-2">
                <Avatar state={agentState} size="sm" />
             </div>

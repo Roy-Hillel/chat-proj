@@ -5,7 +5,7 @@ import { api } from "../api";
 import { ChatLayout } from "./ChatLayout";
 import { MessageBubble } from "./MessageBubble";
 import { ActivityIndicator } from "./ActivityIndicator";
-import { Send, StopCircle, ArrowUp } from "lucide-react";
+import { StopCircle, ArrowUp, Film, Star, ListPlus } from "lucide-react";
 import { Avatar as AvatarStateDisplay, type AvatarState } from "./Avatar";
 
 interface Message {
@@ -243,14 +243,30 @@ export function ChatInterface() {
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scroll-smooth min-h-0">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center space-y-6 opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
                 <AvatarStateDisplay state={avatarState} size="lg" />
                 <h2 className="mt-4 text-xl font-semibold text-gray-800">
-                  How can I help you today?
+                  What should we watch? 🍿
                 </h2>
-                <p className="text-gray-500 text-sm mt-2 text-center max-w-xs">
-                  I can perform calculations, search the web, and recommend movies.
+                <p className="text-gray-500 text-sm mt-2 text-center max-w-sm">
+                  Your personal movie companion - discover films, build your watchlist, and get personalized recommendations.
                 </p>
+                
+                {/* Quick suggestion chips */}
+                <div className="mt-6 flex flex-wrap gap-2 justify-center max-w-md">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
+                    <Film className="w-3.5 h-3.5" />
+                    <span>Discover movies</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full text-xs font-medium">
+                    <ListPlus className="w-3.5 h-3.5" />
+                    <span>Manage watchlist</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-xs font-medium">
+                    <Star className="w-3.5 h-3.5" />
+                    <span>Rate &amp; review</span>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
@@ -310,7 +326,7 @@ export function ChatInterface() {
             </div>
           </form>
           <div className="text-center mt-3 text-xs text-gray-400">
-            AI can make mistakes. Please check important info.
+            🎬 MovieMate may have different taste than you. Always trust your gut!
           </div>
         </div>
       </div>
