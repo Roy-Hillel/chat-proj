@@ -8,11 +8,12 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
+  id            String          @id @default(uuid())
+  email         String          @unique
   name          String?
   conversations Conversation[]
-  createdAt     DateTime       @default(now())
+  watchlist     WatchlistItem[]
+  createdAt     DateTime        @default(now())
 }
 
 model Conversation {
@@ -32,4 +33,18 @@ model Message {
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id])
   createdAt      DateTime     @default(now())
+}
+
+model WatchlistItem {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  imdbRating Float?
+  plot       String?
+  userRating Int?
+  watched    Boolean  @default(false)
+  addedAt    DateTime @default(now())
+
+  @@unique([userId, title])
 }

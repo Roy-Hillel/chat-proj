@@ -1,4 +1,4 @@
-import { AgentTool } from "../types";
+import { AgentTool, ToolContext } from "../types";
 
 interface OmdbResponse {
   Title: string;
@@ -102,7 +102,8 @@ export const movieSimilarityTool: AgentTool = {
       },
     },
   },
-  run: async ({ query, limit }: { query: string; limit?: number }) => {
+  run: async (args: Record<string, unknown>, _context: ToolContext) => {
+    const { query, limit } = args as { query: string; limit?: number };
     const tasteDiveKey = process.env.TASTE_DIVE_API_KEY;
     if (!tasteDiveKey) {
       throw new Error("Missing TASTE_DIVE_API_KEY environment variable.");
@@ -158,13 +159,11 @@ export const movieRatingsTool: AgentTool = {
       },
     },
   },
-  run: async ({
-    titles,
-    includePlot,
-  }: {
-    titles: string[];
-    includePlot?: boolean;
-  }) => {
+  run: async (args: Record<string, unknown>, _context: ToolContext) => {
+    const { titles, includePlot } = args as {
+      titles: string[];
+      includePlot?: boolean;
+    };
     const omdbKey = process.env.OMDB_API_KEY;
     if (!omdbKey) {
       throw new Error("Missing OMDB_API_KEY environment variable.");
@@ -238,19 +237,14 @@ export const movieRecommendationsTool: AgentTool = {
       },
     },
   },
-  run: async ({
-    query,
-    topN,
-    sort,
-    includeRatings,
-    candidateLimit,
-  }: {
-    query: string;
-    topN?: number;
-    sort?: "imdb_desc" | "none";
-    includeRatings?: boolean;
-    candidateLimit?: number;
-  }) => {
+  run: async (args: Record<string, unknown>, _context: ToolContext) => {
+    const { query, topN, sort, includeRatings, candidateLimit } = args as {
+      query: string;
+      topN?: number;
+      sort?: "imdb_desc" | "none";
+      includeRatings?: boolean;
+      candidateLimit?: number;
+    };
     const tasteDiveKey = process.env.TASTE_DIVE_API_KEY;
     const omdbKey = process.env.OMDB_API_KEY;
 
@@ -338,9 +332,11 @@ export const movieRecommendationsTool: AgentTool = {
 
       // Note: if OMDB key is missing, we'll gracefully return similarity-only.
       return `${header}\n\n${formattedResults}`;
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       console.error("Movie mashup failed:", error);
-      return "I failed to fetch movie recommendations. " + error.message;
+      return "I failed to fetch movie recommendations. " + errorMessage;
     }
   },
 };

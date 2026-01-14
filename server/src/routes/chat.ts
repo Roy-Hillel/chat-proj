@@ -52,7 +52,7 @@ router.post('/', async (req, res) => {
 
     let fullResponse = '';
 
-    const generator = runAgent(history);
+    const generator = runAgent(history, { userId });
 
     for await (const event of generator) {
       if (event.type === 'content') {

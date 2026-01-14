@@ -8,11 +8,22 @@ The project uses **SQLite** as its relational database management system.
 - **ORM**: We use **Prisma** to interact with the database, providing a type-safe API and schema management.
 - **Migration**: Database schema changes are managed via Prisma Migrations (stored in `server/prisma/migrations`).
 
+### Database Migrations
+Database schema changes are managed via **Prisma Migrations**.
+1.  **Modify Schema**: Edit `server/prisma/schema.prisma` to define new models or fields.
+2.  **Create Migration**: Run `npx prisma migrate dev --name <migration_name>` in the `server` directory. This:
+    *   Generates a SQL migration file in `server/prisma/migrations`.
+    *   Updates the local SQLite database (`dev.db`).
+    *   Regenerates the Prisma Client.
+3.  **Apply Migrations**: Migrations are applied automatically when running `migrate dev`.
+
 ### Entities & Relations
 
-The data model consists of three core entities with the following relationships:
+The data model consists of four core entities with the following relationships:
 
 **User** 1 ↔ N **Conversation** 1 ↔ N **Message**
+
+**User** 1 ↔ N **WatchlistItem**
 
 #### 1. User
 Represents the authenticated end-user.
@@ -20,7 +31,7 @@ Represents the authenticated end-user.
 - **`email`** (String): Unique identifier for login.
 - **`name`** (String?): Display name (extracted from email).
 - **`createdAt`**: Timestamp of registration.
-- **Relations**: Has many `conversations`.
+- **Relations**: Has many `conversations`, has many `watchlistItems`.
 
 #### 2. Conversation
 Represents a chat session thread.
@@ -40,6 +51,19 @@ Represents a single exchange within a chat.
 - **`conversationId`**: Foreign key to Conversation.
 - **`createdAt`**: Timestamp of the message.
 - **Relations**: Belongs to one `conversation`.
+
+#### 4. WatchlistItem
+Represents a movie saved to a user's personal watchlist.
+- **`id`** (UUID): Unique primary key.
+- **`userId`**: Foreign key to User.
+- **`title`** (String): Movie title (normalized from OMDB).
+- **`imdbRating`** (Float?): IMDb rating at time of save.
+- **`plot`** (String?): Plot summary from OMDB.
+- **`userRating`** (Int?): User's personal rating (1-10 scale).
+- **`watched`** (Boolean): Whether the user has watched this movie (default: false).
+- **`addedAt`**: Timestamp when added to watchlist.
+- **Relations**: Belongs to one `user`.
+- **Constraints**: Unique on `(userId, title)` to prevent duplicates.
 
 ## API Documentation
 
@@ -131,6 +155,14 @@ A suite of tools for movie discovery and information, utilizing external APIs (T
 *   **Description**: A general-purpose search tool.
 *   **Functionality**: (Currently mocked) simulates searching the web to retrieve information about current events or specific queries.
 
+### 4. Watchlist Tools
+A suite of tools for managing a user's personal movie watchlist. These tools perform **actions** (create, read, update, delete) on the database.
+*   **`add_to_watchlist`**: Adds movies to the user's watchlist. Automatically fetches IMDb rating and plot from OMDB. Optionally accepts an initial user rating.
+*   **`get_watchlist`**: Retrieves the user's saved movies. Supports sorting by date added, IMDb rating, or user rating. Can filter by watched status (e.g., "show unwatched movies").
+*   **`remove_from_watchlist`**: Removes movies from the watchlist by title.
+*   **`rate_watchlist_movie`**: Sets or updates the user's personal rating (1-10) for a movie in their watchlist.
+*   **`mark_as_watched`**: Marks movies as watched or unwatched (e.g., "I watched Inception").
+
 ## Agent Core Logic
 
 The intelligence of the system is encapsulated in `server/src/agent/service.ts`, which orchestrates the interaction between the user, the OpenAI API, and the available tools.
@@ -142,6 +174,7 @@ The `runAgent` function is an asynchronous generator that manages the conversati
 3.  **Streaming Response**: As the model generates tokens, they are immediately yielded to the frontend as `content` events.
 4.  **Tool Execution**:
     *   If the model decides to call a tool (e.g., `tool_calls`), the loop pauses to execute the requested function (e.g., calculating a number or fetching movie data).
+    *   Tools receive a `ToolContext` object containing user-scoped data (e.g., `userId`) for personalized operations like watchlist management.
     *   It yields `tool_start` and `tool_end` events so the frontend can display activity indicators.
     *   The tool's result is added back to the conversation history as a `tool` role message.
 5.  **Recursion**: The loop continues, sending the updated history (with tool results) back to the model so it can generate a final natural language response based on the new data.

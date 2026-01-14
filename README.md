@@ -4,12 +4,13 @@ A full-stack AI chat application featuring a tool-using agent, real-time streami
 
 ## Features
 
-- **Agent Orchestration**: Powered by OpenAI, capable of using tools (Calculator, Search, Movie Recommendations).
+- **Agent Orchestration**: Powered by OpenAI, capable of using tools (Calculator, Search, Movie Recommendations, Watchlist).
 - **Movie Recommendations**: Get personalized movie suggestions with IMDb ratings, powered by TasteDive and OMDb APIs.
+- **Personal Watchlist**: Save movies to watch later, rate them, mark as watched, and filter your list.
 - **Tool-Driven**: The agent can perform actions and the UI visualizes this "thinking" process.
 - **Streaming**: Real-time text generation and tool activity updates via Server-Sent Events (SSE).
 - **Contextual Avatar**: The agent's avatar reacts to its internal state (Idle, Thinking, Fetching Movies, Searching, Calculating, Error).
-- **Persistence**: SQLite database stores users, conversations, and messages.
+- **Persistence**: SQLite database stores users, conversations, messages, and watchlist items.
 
 ## Tech Stack
 
@@ -68,20 +69,23 @@ The app will be available at `http://localhost:5173`.
 
 ## Testing
 
-The project includes comprehensive tests for both frontend and backend.
+The project includes comprehensive tests with **dynamic test discovery** - new tests are automatically detected and run without modifying the test runner scripts.
 
 ### Test Structure
 
 ```
 tests/                          # Root-level test runners
-├── run-all.sh                  # Run all tests
-├── run-server-tests.sh         # Server unit tests only
-└── integration/                # Integration tests (require running server)
+├── run-all.sh                  # Run all tests (dynamically discovers tests)
+├── run-server-tests.sh         # Server unit tests (dynamically discovers *.test.ts)
+└── integration/                # Integration tests (dynamically discovers *.test.sh)
     ├── chat.test.sh
-    └── movies.test.sh
+    ├── movies.test.sh
+    └── watchlist.test.sh
 
-server/tests/                   # Server unit tests
-└── movie-tools.test.ts         # Movie tools tests (no LLM required)
+server/tests/                   # Server unit tests (auto-discovered)
+├── conversations-api.test.ts   # API tests (requires server)
+├── movie-tools.test.ts         # Movie tools tests
+└── watchlist-tools.test.ts     # Watchlist tools tests
 
 client/src/                     # Client unit tests (colocated)
 ├── components/*.test.tsx
@@ -90,17 +94,28 @@ client/src/                     # Client unit tests (colocated)
 
 ### Running Tests
 
+**List All Available Tests:**
+```bash
+./tests/run-all.sh --list
+./tests/run-server-tests.sh --list
+```
+
 **Run All Tests:**
 ```bash
-./tests/run-all.sh
+./tests/run-all.sh                    # Run everything
+./tests/run-all.sh --unit-only        # Only unit tests (no server needed)
+./tests/run-all.sh --integration-only # Only integration tests (server needed)
 ```
 
-**Server Unit Tests Only (no server required):**
+**Server Unit Tests:**
 ```bash
-./tests/run-server-tests.sh "The Matrix"
+./tests/run-server-tests.sh           # Run all server unit tests
+./tests/run-server-tests.sh movie     # Run only movie-tools tests
+./tests/run-server-tests.sh watchlist # Run only watchlist-tools tests
+./tests/run-server-tests.sh conversations # Run only API tests (requires server)
 ```
 
-**Client Unit Tests Only:**
+**Client Unit Tests:**
 ```bash
 cd client && npm run test:run
 # Or with watch mode:
@@ -112,16 +127,28 @@ cd client && npm test
 # Start the server first
 cd server && npm run dev
 
-# In another terminal, run integration tests
+# In another terminal
 ./tests/integration/chat.test.sh
 ./tests/integration/movies.test.sh "Inception"
+./tests/integration/watchlist.test.sh
 ```
+
+### Adding New Tests
+
+Tests are **automatically discovered**:
+- **Server unit tests**: Add `server/tests/my-feature.test.ts` → automatically included
+- **Integration tests**: Add `tests/integration/my-feature.test.sh` → automatically included
+
+No need to modify the test runner scripts!
 
 ### Test Requirements
 
-- **Server unit tests**: Require `TASTE_DIVE_API_KEY` and `OMDB_API_KEY` in `server/.env`
-- **Client unit tests**: No additional requirements
-- **Integration tests**: Require the server running on `localhost:3001`
+| Test Type | Requirements |
+|-----------|-------------|
+| Server unit tests | `TASTE_DIVE_API_KEY` and `OMDB_API_KEY` in `server/.env` |
+| Client unit tests | None |
+| Integration tests | Server running on `localhost:3001` |
+| Conversations API tests | Server running on `localhost:3001` |
 
 ## Architecture & Decisions
 

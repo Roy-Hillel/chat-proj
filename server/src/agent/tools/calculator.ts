@@ -1,4 +1,10 @@
-import { AgentTool } from '../types';
+import { AgentTool, ToolContext } from '../types';
+
+interface CalculatorArgs {
+  operation: 'add' | 'subtract' | 'multiply' | 'divide';
+  a: number;
+  b: number;
+}
 
 export const calculatorTool: AgentTool = {
   name: 'calculator',
@@ -18,7 +24,8 @@ export const calculatorTool: AgentTool = {
       },
     },
   },
-  run: async ({ operation, a, b }: { operation: string; a: number; b: number }) => {
+  run: async (args: Record<string, unknown>, _context: ToolContext) => {
+    const { operation, a, b } = args as unknown as CalculatorArgs;
     switch (operation) {
       case 'add': return String(a + b);
       case 'subtract': return String(a - b);

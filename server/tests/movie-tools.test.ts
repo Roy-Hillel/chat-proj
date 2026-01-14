@@ -13,8 +13,12 @@ import {
   movieRecommendationsTool,
   movieSimilarityTool,
 } from "../src/agent/tools/movies";
+import { ToolContext } from "../src/agent/types";
 
 dotenv.config();
+
+// Dummy context for movie tools (they don't use userId)
+const dummyContext: ToolContext = { userId: "test-user" };
 
 type TestResult = { name: string; ok: true } | { name: string; ok: false; error: Error };
 
@@ -117,7 +121,7 @@ async function main() {
       name: "movie_similarity returns similarity list (no IMDb ratings)",
       fn: async () => {
         const out = await retry(
-          () => movieSimilarityTool.run({ query, limit: 10 }),
+          () => movieSimilarityTool.run({ query, limit: 10 }, dummyContext),
           { attempts: 3, baseDelayMs: 1000, shouldRetry: isProviderFlake }
         );
         assert(typeof out === "string" && out.length > 0, "Expected non-empty string output");
@@ -130,7 +134,7 @@ async function main() {
     {
       name: "movie_ratings returns ratings for given titles",
       fn: async () => {
-        const out = await movieRatingsTool.run({ titles: [query, "Titanic"], includePlot: false });
+        const out = await movieRatingsTool.run({ titles: [query, "Titanic"], includePlot: false }, dummyContext);
         assert(typeof out === "string" && out.startsWith("Ratings:"), "Expected Ratings header");
         assert(out.includes("IMDb:"), "Expected IMDb lines");
         assert(parseTitles(out).length >= 2, "Expected at least 2 title blocks");
@@ -139,7 +143,7 @@ async function main() {
     {
       name: "movie_ratings includePlot=true includes plot lines",
       fn: async () => {
-        const out = await movieRatingsTool.run({ titles: [query], includePlot: true });
+        const out = await movieRatingsTool.run({ titles: [query], includePlot: true }, dummyContext);
         assert(out.includes("\nPlot:"), "Expected Plot line when includePlot=true");
       },
     },
@@ -148,7 +152,7 @@ async function main() {
       fn: async () => {
         const out = await retry(
           async () => {
-            const r = await movieRecommendationsTool.run({ query });
+            const r = await movieRecommendationsTool.run({ query }, dummyContext);
             if (isRecommendationFailureString(r)) throw new Error(r);
             return r;
           },
@@ -178,7 +182,7 @@ async function main() {
       name: "movie_recommendations sort=none + includeRatings=false preserves similarity order",
       fn: async () => {
         const simOut = await retry(
-          () => movieSimilarityTool.run({ query, limit: 10 }),
+          () => movieSimilarityTool.run({ query, limit: 10 }, dummyContext),
           { attempts: 3, baseDelayMs: 1000, shouldRetry: isProviderFlake }
         );
         const simTitles = parseTitles(simOut).slice(0, 5);
@@ -195,7 +199,7 @@ async function main() {
               sort: "none",
               includeRatings: false,
               candidateLimit: 10,
-            });
+            }, dummyContext);
             if (isRecommendationFailureString(r)) throw new Error(r);
             return r;
           },
@@ -221,7 +225,7 @@ async function main() {
       name: "movie_recommendations sort=none + includeRatings=true keeps similarity order while adding ratings",
       fn: async () => {
         const simOut = await retry(
-          () => movieSimilarityTool.run({ query, limit: 10 }),
+          () => movieSimilarityTool.run({ query, limit: 10 }, dummyContext),
           { attempts: 3, baseDelayMs: 1000, shouldRetry: isProviderFlake }
         );
         const simTitles = parseTitles(simOut).slice(0, 5);
@@ -238,7 +242,7 @@ async function main() {
               sort: "none",
               includeRatings: true,
               candidateLimit: 10,
-            });
+            }, dummyContext);
             if (isRecommendationFailureString(r)) throw new Error(r);
             return r;
           },

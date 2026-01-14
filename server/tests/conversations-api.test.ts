@@ -32,7 +32,8 @@ async function createTestUser(): Promise<{ id: string; email: string }> {
     body: JSON.stringify({ email }),
   });
   const data = await res.json();
-  return { id: data.id, email };
+  // Login response is { user: { id, email, ... } }
+  return { id: data.user.id, email };
 }
 
 async function main() {
@@ -49,7 +50,6 @@ async function main() {
     return;
   }
 
-  const tests: Array<Promise<TestResult>> = [];
   let testUser: { id: string; email: string };
   let testConversationId: string;
 
@@ -63,106 +63,103 @@ async function main() {
     return;
   }
 
-  // Test: Create conversation with default title
-  tests.push(
-    runTest('POST /conversations - creates conversation with default title', async () => {
-      const res = await fetch(`${BASE_URL}/conversations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: testUser.id }),
-      });
-      assert(res.ok, `Expected 200, got ${res.status}`);
-      const data = await res.json();
-      assert(data.id, 'Expected conversation to have id');
-      assert(data.title === 'New Chat', `Expected title 'New Chat', got '${data.title}'`);
-      testConversationId = data.id;
-    })
-  );
+  // Define tests as functions (not promises) to run sequentially
+  const testFns: Array<{ name: string; fn: () => Promise<void> }> = [
+    {
+      name: 'POST /conversations - creates conversation with default title',
+      fn: async () => {
+        const res = await fetch(`${BASE_URL}/conversations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: testUser.id }),
+        });
+        assert(res.ok, `Expected 200, got ${res.status}`);
+        const data = await res.json();
+        assert(data.id, 'Expected conversation to have id');
+        assert(data.title === 'New Chat', `Expected title 'New Chat', got '${data.title}'`);
+        testConversationId = data.id;
+      },
+    },
+    {
+      name: 'POST /conversations - creates conversation with custom title',
+      fn: async () => {
+        const res = await fetch(`${BASE_URL}/conversations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: testUser.id, title: 'My Custom Chat' }),
+        });
+        assert(res.ok, `Expected 200, got ${res.status}`);
+        const data = await res.json();
+        assert(data.title === 'My Custom Chat', `Expected title 'My Custom Chat', got '${data.title}'`);
+      },
+    },
+    {
+      name: 'GET /conversations/user/:userId - lists user conversations',
+      fn: async () => {
+        const res = await fetch(`${BASE_URL}/conversations/user/${testUser.id}`);
+        assert(res.ok, `Expected 200, got ${res.status}`);
+        const data = await res.json();
+        assert(Array.isArray(data), 'Expected array of conversations');
+        assert(data.length >= 2, `Expected at least 2 conversations, got ${data.length}`);
+      },
+    },
+    {
+      name: 'GET /conversations/:id - returns conversation with messages',
+      fn: async () => {
+        const res = await fetch(`${BASE_URL}/conversations/${testConversationId}`);
+        assert(res.ok, `Expected 200, got ${res.status}`);
+        const data = await res.json();
+        assert(data.id === testConversationId, 'Expected matching conversation id');
+        assert(Array.isArray(data.messages), 'Expected messages array');
+      },
+    },
+    {
+      name: 'GET /conversations/:id - returns 404 for non-existent id',
+      fn: async () => {
+        const res = await fetch(`${BASE_URL}/conversations/non-existent-id`);
+        assert(res.status === 404, `Expected 404, got ${res.status}`);
+      },
+    },
+    {
+      name: 'DELETE /conversations/:id - deletes conversation and its messages',
+      fn: async () => {
+        // First create a conversation to delete
+        const createRes = await fetch(`${BASE_URL}/conversations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: testUser.id, title: 'To Be Deleted' }),
+        });
+        const created = await createRes.json();
 
-  // Test: Create conversation with custom title
-  tests.push(
-    runTest('POST /conversations - creates conversation with custom title', async () => {
-      const res = await fetch(`${BASE_URL}/conversations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: testUser.id, title: 'My Custom Chat' }),
-      });
-      assert(res.ok, `Expected 200, got ${res.status}`);
-      const data = await res.json();
-      assert(data.title === 'My Custom Chat', `Expected title 'My Custom Chat', got '${data.title}'`);
-    })
-  );
+        // Delete it
+        const deleteRes = await fetch(`${BASE_URL}/conversations/${created.id}`, {
+          method: 'DELETE',
+        });
+        assert(deleteRes.ok, `Expected 200, got ${deleteRes.status}`);
+        const deleteData = await deleteRes.json();
+        assert(deleteData.success === true, 'Expected success: true');
 
-  // Test: List conversations for user
-  tests.push(
-    runTest('GET /conversations/user/:userId - lists user conversations', async () => {
-      const res = await fetch(`${BASE_URL}/conversations/user/${testUser.id}`);
-      assert(res.ok, `Expected 200, got ${res.status}`);
-      const data = await res.json();
-      assert(Array.isArray(data), 'Expected array of conversations');
-      assert(data.length >= 2, `Expected at least 2 conversations, got ${data.length}`);
-    })
-  );
-
-  // Test: Get conversation details
-  tests.push(
-    runTest('GET /conversations/:id - returns conversation with messages', async () => {
-      const res = await fetch(`${BASE_URL}/conversations/${testConversationId}`);
-      assert(res.ok, `Expected 200, got ${res.status}`);
-      const data = await res.json();
-      assert(data.id === testConversationId, 'Expected matching conversation id');
-      assert(Array.isArray(data.messages), 'Expected messages array');
-    })
-  );
-
-  // Test: Get non-existent conversation
-  tests.push(
-    runTest('GET /conversations/:id - returns 404 for non-existent id', async () => {
-      const res = await fetch(`${BASE_URL}/conversations/non-existent-id`);
-      assert(res.status === 404, `Expected 404, got ${res.status}`);
-    })
-  );
-
-  // Test: Delete conversation
-  tests.push(
-    runTest('DELETE /conversations/:id - deletes conversation and its messages', async () => {
-      // First create a conversation to delete
-      const createRes = await fetch(`${BASE_URL}/conversations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: testUser.id, title: 'To Be Deleted' }),
-      });
-      const created = await createRes.json();
-      
-      // Delete it
-      const deleteRes = await fetch(`${BASE_URL}/conversations/${created.id}`, {
-        method: 'DELETE',
-      });
-      assert(deleteRes.ok, `Expected 200, got ${deleteRes.status}`);
-      const deleteData = await deleteRes.json();
-      assert(deleteData.success === true, 'Expected success: true');
-      
-      // Verify it's gone
-      const getRes = await fetch(`${BASE_URL}/conversations/${created.id}`);
-      assert(getRes.status === 404, 'Expected conversation to be deleted (404)');
-    })
-  );
-
-  // Test: Delete non-existent conversation
-  tests.push(
-    runTest('DELETE /conversations/:id - handles non-existent id gracefully', async () => {
-      const res = await fetch(`${BASE_URL}/conversations/non-existent-id-12345`, {
-        method: 'DELETE',
-      });
-      // Should return 500 (Prisma throws when record not found)
-      assert(res.status === 500, `Expected 500 for non-existent delete, got ${res.status}`);
-    })
-  );
+        // Verify it's gone
+        const getRes = await fetch(`${BASE_URL}/conversations/${created.id}`);
+        assert(getRes.status === 404, 'Expected conversation to be deleted (404)');
+      },
+    },
+    {
+      name: 'DELETE /conversations/:id - handles non-existent id gracefully',
+      fn: async () => {
+        const res = await fetch(`${BASE_URL}/conversations/non-existent-id-12345`, {
+          method: 'DELETE',
+        });
+        // Should return 500 (Prisma throws when record not found)
+        assert(res.status === 500, `Expected 500 for non-existent delete, got ${res.status}`);
+      },
+    },
+  ];
 
   // Run all tests sequentially
   const results: TestResult[] = [];
-  for (const testPromise of tests) {
-    results.push(await testPromise);
+  for (const { name, fn } of testFns) {
+    results.push(await runTest(name, fn));
   }
 
   // Print results

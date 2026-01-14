@@ -1,9 +1,17 @@
 import { ChatCompletionTool } from 'openai/resources/chat/completions';
 
+/**
+ * Context passed to tools at runtime.
+ * Contains user-scoped information needed for personalized operations.
+ */
+export interface ToolContext {
+  userId: string;
+}
+
 export interface AgentTool {
   name: string;
   definition: ChatCompletionTool;
-  run: (args: any) => Promise<string>;
+  run: (args: Record<string, unknown>, context: ToolContext) => Promise<string>;
 }
 
 export type AgentEvent = 
