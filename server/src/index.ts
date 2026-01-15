@@ -5,7 +5,7 @@ import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
 import conversationRoutes from './routes/conversations';
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const app = express();
 const PORT = process.env.PORT || 3001;

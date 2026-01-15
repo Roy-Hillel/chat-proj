@@ -84,7 +84,7 @@ export const movieSimilarityTool: AgentTool = {
     function: {
       name: "movie_similarity",
       description:
-        "Find similar movies without ratings or sorting. Use ONLY when the user explicitly wants just a similarity list (e.g., 'what movies are like X?' without mentioning ratings or best). For general recommendations, prefer movie_recommendations instead.",
+        "Find similar movies without ratings. PREFER using movie_recommendations instead, which includes IMDb ratings and sorting. Only use this tool if user explicitly says 'no ratings', 'just titles', or 'without scores'.",
       parameters: {
         type: "object",
         properties: {
@@ -203,7 +203,7 @@ export const movieRecommendationsTool: AgentTool = {
     function: {
       name: "movie_recommendations",
       description:
-        "PRIMARY tool for movie recommendations. Finds similar movies based on user's input, enriches with IMDb ratings, and returns top results sorted by rating (best first). Use this for any 'recommend movies like X' or 'suggest movies similar to X' request. Defaults: sorted by IMDb rating descending, includes ratings.",
+        "ALWAYS USE THIS TOOL for any movie recommendation or 'similar movies' request. This is the PRIMARY and PREFERRED tool. Returns 4 movies by default with IMDb ratings, sorted by rating (best first). Examples: 'movies like X', 'similar to X', 'recommend movies', 'what should I watch'. IMPORTANT: Do NOT pass optional parameters - let defaults apply (4 movies, with ratings, sorted by IMDb).",
       parameters: {
         type: "object",
         properties: {
@@ -214,18 +214,19 @@ export const movieRecommendationsTool: AgentTool = {
           },
           topN: {
             type: "number",
-            description: "Number of recommendations to return. Default: 5.",
+            description:
+              "Number of recommendations to return. Default: 4. Only set if user explicitly asks for a specific number.",
           },
           sort: {
             type: "string",
             enum: ["imdb_desc", "none"],
             description:
-              "imdb_desc (default): best-rated first. none: keep original similarity order. Use 'none' only if user says 'don't sort' or 'any order'.",
+              "DO NOT SET unless user explicitly requests unsorted. Default 'imdb_desc' shows best-rated first. Only use 'none' if user says 'don't sort' or 'any order'.",
           },
           includeRatings: {
             type: "boolean",
             description:
-              "true (default): show IMDb ratings. false: omit ratings. Use false only if user says 'no ratings' or 'just titles'.",
+              "DO NOT SET unless user explicitly says 'no ratings'. Default true shows IMDb ratings. Only set false if user says 'no ratings' or 'just titles'.",
           },
           candidateLimit: {
             type: "number",
@@ -254,7 +255,7 @@ export const movieRecommendationsTool: AgentTool = {
 
     const resolvedTopN = Number.isFinite(topN as number)
       ? Math.max(1, topN as number)
-      : 5;
+      : 4;
     const resolvedCandidateLimit = Number.isFinite(candidateLimit as number)
       ? Math.max(resolvedTopN, candidateLimit as number)
       : 10;
@@ -315,18 +316,17 @@ export const movieRecommendationsTool: AgentTool = {
       const selected = enriched.slice(0, resolvedTopN);
       const header =
         resolvedSort === "imdb_desc" && resolvedIncludeRatings && omdbKey
-          ? `Here are the top rated movies similar to "${query}":`
-          : `Here are similar movies for "${query}":`;
+          ? `🎬 Top rated movies similar to "${query}" (sorted by IMDb rating):`
+          : `🎬 Movies similar to "${query}":`;
 
       const formattedResults = selected
         .filter((m) => m.title)
-        .map((m) => {
-          const rating =
-            m.imdbRating === null ? "" : ` (IMDb: ${m.imdbRating})`;
+        .map((m, index) => {
+          const ratingDisplay = m.imdbRating !== null ? m.imdbRating : "N/A";
           const summary = (m.plot || m.summary || "").trim() || "N/A";
-          return `Title: ${m.title}${rating}\nSummary: ${summary}\nTrailer: ${
-            m.trailerUrl || "N/A"
-          }`;
+          return `${index + 1}. ${
+            m.title
+          } ⭐ IMDb: ${ratingDisplay}\n   ${summary}`;
         })
         .join("\n\n");
 

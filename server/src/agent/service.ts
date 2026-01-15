@@ -42,14 +42,6 @@ export async function* runAgent(
         tool_calls: [] as any[],
       };
 
-      // Ensure content is string to avoid encoding issues
-      // const safeMessages = currentMessages.map(m => ({
-      //   ...m,
-      //   content: String(m.content)
-      // }));
-
-      console.log("Using API key:", openai.apiKey);
-
       const stream = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: currentMessages,

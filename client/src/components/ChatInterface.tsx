@@ -40,6 +40,13 @@ export function ChatInterface() {
     inputRef.current?.focus();
   }, [currentConvId]);
 
+  // Focus input when streaming ends (after re-render enables the input)
+  useEffect(() => {
+    if (!isStreaming) {
+      inputRef.current?.focus();
+    }
+  }, [isStreaming]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -88,14 +95,14 @@ export function ChatInterface() {
       role: "user" as const,
       content: input,
     };
-    
+
     // Optimistically update the title if this is the first message
     const isFirstMessage = messages.length === 0;
     if (isFirstMessage && convId) {
-      const newTitle = input.substring(0, 50).trim() || 'New Chat';
+      const newTitle = input.substring(0, 50).trim() || "New Chat";
       conversationHelpersRef.current?.updateTitle(convId, newTitle);
     }
-    
+
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsStreaming(true);
@@ -186,7 +193,8 @@ export function ChatInterface() {
                 // Update the existing tool_start activity instead of adding a new one
                 setActivities((prev) =>
                   prev.map((activity) =>
-                    activity.type === "tool_start" && activity.tool === data.tool
+                    activity.type === "tool_start" &&
+                    activity.tool === data.tool
                       ? { ...activity, type: "tool_end", output: data.output }
                       : activity
                   )
@@ -235,7 +243,9 @@ export function ChatInterface() {
       onSelectConversation={loadConversation}
       onNewChat={createNewChat}
       onDeleteConversation={handleDeleteConversation}
-      onRegisterConversationHelpers={(helpers) => { conversationHelpersRef.current = helpers; }}
+      onRegisterConversationHelpers={(helpers) => {
+        conversationHelpersRef.current = helpers;
+      }}
       agentState={avatarState}
     >
       <div className="flex flex-col h-full w-full min-h-0 overflow-hidden">
@@ -249,9 +259,10 @@ export function ChatInterface() {
                   What should we watch? 🍿
                 </h2>
                 <p className="text-gray-500 text-sm mt-2 text-center max-w-sm">
-                  Your personal movie companion - discover films, build your watchlist, and get personalized recommendations.
+                  Your personal movie companion - discover films, build your
+                  watchlist, and get personalized recommendations.
                 </p>
-                
+
                 {/* Quick suggestion chips */}
                 <div className="mt-6 flex flex-wrap gap-2 justify-center max-w-md">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
@@ -272,9 +283,9 @@ export function ChatInterface() {
           ) : (
             <>
               {messages.map((m) => (
-                <MessageBubble 
-                  key={m.id} 
-                  role={m.role} 
+                <MessageBubble
+                  key={m.id}
+                  role={m.role}
                   content={m.content}
                   userInitial={user?.email?.[0]?.toUpperCase()}
                 />
@@ -326,7 +337,8 @@ export function ChatInterface() {
             </div>
           </form>
           <div className="text-center mt-3 text-xs text-gray-400">
-            🎬 MovieMate may have different taste than you. Always trust your gut!
+            🎬 MovieMate may have different taste than you. Always trust your
+            gut!
           </div>
         </div>
       </div>

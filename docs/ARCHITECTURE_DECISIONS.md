@@ -28,7 +28,7 @@ Despite time constraints, I maintained high standards in these critical areas:
 
 ### 2. **Documentation**
 - README.md with setup instructions and API overview
-- Project_overview.md explaining architecture and patterns
+- PROJECT_OVERVIEW.md explaining architecture and patterns
 - Inline comments where logic is non-obvious
 
 ### 3. **LLM Rules & System Prompts**

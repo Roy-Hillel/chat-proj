@@ -18,6 +18,7 @@ interface OmdbResponse {
 interface AddToWatchlistArgs {
   titles: string[];
   userRating?: number;
+  markAsWatched?: boolean;
 }
 
 interface GetWatchlistArgs {
@@ -119,7 +120,7 @@ export const addToWatchlistTool: AgentTool = {
     function: {
       name: "add_to_watchlist",
       description:
-        "Add one or more movies to the user's personal watchlist. Automatically fetches IMDb rating and plot. Use when the user says 'add X to my watchlist', 'save this movie', or 'remember this for later'.",
+        "Add one or more movies to the user's personal watchlist. Automatically fetches IMDb rating and plot. Use when the user says 'add X to my watchlist', 'save this movie', or 'remember this for later'. IMPORTANT: If the user provides a rating when adding a movie, assume they have already watched it and set markAsWatched to true. If it's unclear whether the user has watched the movie, ask them before adding.",
       parameters: {
         type: "object",
         properties: {
@@ -131,7 +132,12 @@ export const addToWatchlistTool: AgentTool = {
           userRating: {
             type: "number",
             description:
-              "Optional user rating (1-10) to assign to all added movies.",
+              "Optional user rating (1-10) to assign to all added movies. If provided, markAsWatched should typically be true since users rate movies they've seen.",
+          },
+          markAsWatched: {
+            type: "boolean",
+            description:
+              "Whether to mark the movie(s) as already watched. Set to true if the user provides a rating or explicitly says they've seen it.",
           },
         },
         required: ["titles"],
@@ -139,7 +145,7 @@ export const addToWatchlistTool: AgentTool = {
     },
   },
   run: async (args: Record<string, unknown>, context: ToolContext) => {
-    const { titles, userRating } = args as unknown as AddToWatchlistArgs;
+    const { titles, userRating, markAsWatched } = args as unknown as AddToWatchlistArgs;
     const { userId } = context;
 
     if (!titles || titles.length === 0) {
@@ -151,6 +157,9 @@ export const addToWatchlistTool: AgentTool = {
       userRating !== undefined
         ? Math.min(10, Math.max(1, Math.round(userRating)))
         : undefined;
+    
+    // If user provided a rating, default to marking as watched
+    const shouldMarkWatched = markAsWatched ?? (validatedRating !== undefined);
 
     const results: string[] = [];
     const added: string[] = [];
@@ -181,13 +190,15 @@ export const addToWatchlistTool: AgentTool = {
             imdbRating: omdbData.imdbRating,
             plot: omdbData.plot,
             userRating: validatedRating,
+            watched: shouldMarkWatched,
           },
         });
 
         const ratingInfo = omdbData.imdbRating
           ? ` (IMDb: ${omdbData.imdbRating})`
           : "";
-        added.push(`${omdbData.title}${ratingInfo}`);
+        const watchedInfo = shouldMarkWatched ? " ✅" : "";
+        added.push(`${omdbData.title}${ratingInfo}${watchedInfo}`);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
@@ -201,7 +212,8 @@ export const addToWatchlistTool: AgentTool = {
 
     // Build response
     if (added.length > 0) {
-      results.push(`✅ Added to your watchlist:\n${added.join("\n")}`);
+      const watchedNote = shouldMarkWatched ? " (marked as watched)" : "";
+      results.push(`✅ Added to your watchlist${watchedNote}:\n${added.join("\n")}`);
     }
     if (alreadyExists.length > 0) {
       results.push(`ℹ️ Already in your watchlist: ${alreadyExists.join(", ")}`);
@@ -225,7 +237,7 @@ export const getWatchlistTool: AgentTool = {
     function: {
       name: "get_watchlist",
       description:
-        "Retrieve the user's watchlist. Use when the user asks 'show my watchlist', 'what movies have I saved?', 'what's on my list?', 'show unwatched movies', or 'what haven't I watched yet?'.",
+        "Retrieve the user's watchlist. Use when the user asks 'show my watchlist', 'what movies have I saved?', 'what's on my list?', 'show unwatched movies', or 'what haven't I watched yet?'. Present the results exactly as returned.",
       parameters: {
         type: "object",
         properties: {
@@ -287,19 +299,6 @@ export const getWatchlistTool: AgentTool = {
         return "Your watchlist is empty. Use 'add to watchlist' to save movies!";
       }
 
-      const formatted = watchlist.map((item, index) => {
-        const imdb = item.imdbRating ? `IMDb: ${item.imdbRating}` : "IMDb: N/A";
-        const userRating = item.userRating
-          ? `Your rating: ${item.userRating}/10`
-          : "Your rating: Not rated";
-        const watchedStatus = item.watched ? "✅ Watched" : "⏳ Not watched";
-        const plot = item.plot ? `\n   Plot: ${item.plot}` : "";
-
-        return `${index + 1}. **${
-          item.title
-        }** [${watchedStatus}]\n   ${imdb} | ${userRating}${plot}`;
-      });
-
       const sortLabel =
         sortBy === "imdbRating"
           ? "by IMDb rating"
@@ -309,16 +308,20 @@ export const getWatchlistTool: AgentTool = {
 
       const filterLabel =
         watched === true
-          ? " - watched only"
+          ? " (watched only)"
           : watched === false
-          ? " - unwatched only"
+          ? " (unwatched only)"
           : "";
 
-      return `📽️ Your Watchlist (${
-        watchlist.length
-      } movies, sorted ${sortLabel}${filterLabel}):\n\n${formatted.join(
-        "\n\n"
-      )}`;
+      // Build clean list format
+      const rows = watchlist.map((item, index) => {
+        const status = item.watched ? "✅" : "⏳";
+        const imdb = item.imdbRating ? `⭐ ${item.imdbRating}` : "";
+        const userRating = item.userRating ? `• Your rating: ${item.userRating}/10` : "";
+        return `${index + 1}. ${status} **${item.title}** ${imdb} ${userRating}`.trim();
+      });
+
+      return `📽️ **Your Watchlist** (${watchlist.length} movies, sorted ${sortLabel}${filterLabel})\n\n${rows.join("\n")}`;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";

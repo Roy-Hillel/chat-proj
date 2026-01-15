@@ -1,6 +1,6 @@
 # MovieMate
 
-A full-stack AI chat application featuring a tool-using agent, real-time streaming, and a contextual avatar.
+A full-stack AI Movie themed chat application featuring a tool-using agent, real-time streaming, and a contextual avatar.
 
 ## Features
 
