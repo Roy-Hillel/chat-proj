@@ -157,11 +157,43 @@ A suite of tools for movie discovery and information, utilizing external APIs (T
 
 ### 4. Watchlist Tools
 A suite of tools for managing a user's personal movie watchlist. These tools perform **actions** (create, read, update, delete) on the database.
-*   **`add_to_watchlist`**: Adds movies to the user's watchlist. Automatically fetches IMDb rating and plot from OMDB. Optionally accepts an initial user rating.
-*   **`get_watchlist`**: Retrieves the user's saved movies. Supports sorting by date added, IMDb rating, or user rating. Can filter by watched status (e.g., "show unwatched movies").
-*   **`remove_from_watchlist`**: Removes movies from the watchlist by title.
-*   **`rate_watchlist_movie`**: Sets or updates the user's personal rating (1-10) for a movie in their watchlist.
-*   **`mark_as_watched`**: Marks movies as watched or unwatched (e.g., "I watched Inception").
+
+#### Available Tools
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `add_to_watchlist` | Adds movies to the watchlist. Auto-fetches IMDb rating and plot from OMDB. | `titles[]`, `userRating?`, `markAsWatched?` |
+| `get_watchlist` | Retrieves saved movies with sorting and filtering. | `sortBy?` (addedAt/imdbRating/userRating), `watched?` (true/false) |
+| `remove_from_watchlist` | Removes movies from the watchlist by title. | `titles[]` |
+| `rate_watchlist_movie` | Sets or updates user's personal rating (1-10). | `title`, `rating` |
+| `mark_as_watched` | Marks movies as watched or unwatched. | `titles[]`, `watched?` |
+
+#### Natural Language Mapping
+
+The AI agent interprets natural language and invokes the appropriate tool:
+
+| User Says | Tool Invoked | Action |
+|-----------|--------------|--------|
+| "Add Inception to my watchlist" | `add_to_watchlist` | Creates entry with OMDB data |
+| "Show my watchlist" | `get_watchlist` | Returns all saved movies |
+| "Show unwatched movies" | `get_watchlist` | Returns items with `watched=false` |
+| "Sort my list by rating" | `get_watchlist` | Returns items sorted by `imdbRating` |
+| "Remove The Matrix from my list" | `remove_from_watchlist` | Deletes watchlist entry |
+| "Rate Inception 9/10" | `rate_watchlist_movie` | Updates `userRating` to 9 |
+| "I watched Inception" | `mark_as_watched` | Sets `watched=true` |
+| "Mark Inception as unwatched" | `mark_as_watched` | Sets `watched=false` |
+
+#### Example Flow
+
+When a user sends "Add Inception to my watchlist, I'd rate it 9/10":
+
+1. **Chat API** receives the message via `POST /api/chat`
+2. **Agent** interprets intent and calls `add_to_watchlist({ titles: ["Inception"], userRating: 9, markAsWatched: true })`
+3. **Tool** fetches OMDB data and creates database entry
+4. **SSE Events** sent to frontend:
+   - `tool_start`: `{ "tool": "add_to_watchlist", "input": { "titles": ["Inception"] } }`
+   - `tool_end`: `{ "tool": "add_to_watchlist", "output": "✅ Added to your watchlist..." }`
+5. **Agent** generates natural language confirmation
 
 ## Agent Core Logic
 

@@ -6,25 +6,27 @@ interface OmdbResponse {
   Plot?: string;
 }
 
-type SimilarMovie = {
+// Exported types for testing
+export type SimilarMovie = {
   title: string;
   summary: string;
   trailerUrl: string | null;
 };
 
-type RatedMovie = {
+export type RatedMovie = {
   title: string;
   imdbRating: number | null;
   plot: string | null;
 };
 
-function parseImdbRating(ratingStr: string | undefined): number | null {
+export function parseImdbRating(ratingStr: string | undefined): number | null {
   if (!ratingStr || ratingStr === "N/A") return null;
   const n = Number.parseFloat(ratingStr);
   return Number.isFinite(n) ? n : null;
 }
 
-async function fetchSimilarMoviesFromTasteDive(args: {
+// Exported for direct testing - fetches similar movies from TasteDive API
+export async function fetchSimilarMoviesFromTasteDive(args: {
   query: string;
   apiKey: string;
   limit: number;
@@ -60,7 +62,8 @@ async function fetchSimilarMoviesFromTasteDive(args: {
   }));
 }
 
-async function fetchOmdbDetails(args: {
+// Exported for direct testing - fetches movie details from OMDB API
+export async function fetchOmdbDetails(args: {
   title: string;
   apiKey: string;
 }): Promise<RatedMovie> {

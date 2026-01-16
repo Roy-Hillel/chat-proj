@@ -71,7 +71,7 @@ describe('ChatInterface Component', () => {
     it('displays welcome message when no messages', async () => {
       renderWithAuth();
       await waitFor(() => {
-        expect(screen.getByText('How can I help you today?')).toBeInTheDocument();
+        expect(screen.getByText('What should we watch? 🍿')).toBeInTheDocument();
       });
     });
 
@@ -94,7 +94,7 @@ describe('ChatInterface Component', () => {
     it('displays disclaimer text', async () => {
       renderWithAuth();
       await waitFor(() => {
-        expect(screen.getByText('AI can make mistakes. Please check important info.')).toBeInTheDocument();
+        expect(screen.getByText(/MovieMate may have different taste than you/)).toBeInTheDocument();
       });
     });
   });
@@ -179,8 +179,8 @@ describe('ChatInterface Component', () => {
       renderWithAuth();
 
       await waitFor(() => {
-        expect(screen.getByText('How can I help you today?')).toBeInTheDocument();
-        expect(screen.getByText('I can perform calculations, search the web, and recommend movies.')).toBeInTheDocument();
+        expect(screen.getByText('What should we watch? 🍿')).toBeInTheDocument();
+        expect(screen.getByText(/Your personal movie companion/)).toBeInTheDocument();
       });
     });
 
