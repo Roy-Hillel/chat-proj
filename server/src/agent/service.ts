@@ -20,7 +20,7 @@ export async function* runAgent(
   context: ToolContext
 ): AsyncGenerator<AgentEvent> {
   // Check if we should use Mock Mode (e.g. if API key is invalid/quota exceeded previously)
-    // Since we know the key is failing with 429, let's wrap the real call in try/catch and fallback.
+  // Default to Real Agent, but fallback to Mock if it fails or if env var is set.
 
   try {
     // Prepend system instructions at runtime (we don't store system messages in DB).
